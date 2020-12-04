@@ -2,12 +2,31 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace CodeAdvent.Puzzles
 {
     public class Day4 : AbstractPuzzle<string>
     {
         protected override void SolvePuzzle1(IList<string> input)
+        {
+            var passports = GetPassports(input);
+
+            var numberOfValidPassports = passports.Count(p => p.AllRequiredFieldsFilled());
+
+            Console.WriteLine($"[Puzzle 1]: Valid passports {numberOfValidPassports} out of {passports.Count}");
+        }
+
+        protected override void SolvePuzzle2(IList<string> input)
+        {
+            var passports = GetPassports(input);
+
+            var numberOfValidPassports = passports.Count(p => p.AllRequiredFieldsValid());
+
+            Console.WriteLine($"[Puzzle 2]: Valid passports {numberOfValidPassports} out of {passports.Count}");
+        }
+
+        private static IList<Passport> GetPassports(IList<string> input)
         {
             var passports = new List<Passport>();
 
@@ -31,14 +50,7 @@ namespace CodeAdvent.Puzzles
                 }
             }
 
-            var numberOfValidPassports = passports.Count(p => p.IsValid());
-
-            Console.WriteLine($"[Puzzle 1]: Valid passports {numberOfValidPassports} out of {passports.Count}");
-        }
-
-        protected override void SolvePuzzle2(IList<string> input)
-        {
-            Console.WriteLine("[Puzzle 2]: TODO");
+            return passports;
         }
 
         private class Passport
@@ -52,7 +64,7 @@ namespace CodeAdvent.Puzzles
             public string Pid { get; private set; }
             public string Cid { get; private set; }
 
-            public bool IsValid()
+            public bool AllRequiredFieldsFilled()
             {
                 return Byr != null
                     && Iyr != null
@@ -61,6 +73,17 @@ namespace CodeAdvent.Puzzles
                     && Hcl != null
                     && Ecl != null
                     && Pid != null;
+            }
+
+            public bool AllRequiredFieldsValid()
+            {
+                return IsByrValid()
+                    && IsIyrValid()
+                    && IsEyrValid()
+                    && IsHgtValid()
+                    && IsHclValid()
+                    && IsEclValid()
+                    && IsPidValid();
             }
 
             public void Set(string[] keyValuePairs)
@@ -106,6 +129,66 @@ namespace CodeAdvent.Puzzles
                     default:
                         throw new Exception("Unknown key");
                 }
+            }
+
+            private bool IsPidValid()
+            {
+                return Pid != null && Pid.Length == 9 && int.TryParse(Pid, out var result);
+            }
+
+            private bool IsEclValid()
+            {
+                var allowedValues = new List<string> { "amb", "blu", "brn", "gry", "grn", "hzl", "oth" };
+
+                return allowedValues.Contains(Ecl);
+            }
+
+            private bool IsHclValid()
+            {
+                var regex = new Regex("^#([a-fA-F0-9]{6})$");
+
+                return Hcl != null
+                    && regex.IsMatch(Hcl);
+            }
+
+            private bool IsHgtValid()
+            {
+                if (Hgt != null)
+                {
+                    if (Hgt.EndsWith("cm"))
+                    {
+                        var length = int.Parse(Hgt.Substring(0, Hgt.Length - 2));
+                        return 150 <= length && length <= 193;
+                    }
+                    else if (Hgt.EndsWith("in"))
+                    {
+                        var length = int.Parse(Hgt.Substring(0, Hgt.Length - 2));
+                        return 59 <= length && length <= 76;
+                    }
+                }
+
+                return false;
+            }
+
+            private bool IsEyrValid()
+            {
+                return int.TryParse(Eyr, out var year)
+                    && 2020 <= year
+                    && year <= 2030;
+            }
+
+            private bool IsIyrValid()
+            {
+                return int.TryParse(Iyr, out var year)
+                    && 2010 <= year
+                    && year <= 2020;
+            }
+
+            private bool IsByrValid()
+            {
+                return int.TryParse(Byr, out var year)
+                    && 1920 <= year
+                    && year <= 2002;
             }
         }
     }
