@@ -13,7 +13,10 @@ namespace CodeAdvent
             //day2.Solve();
 
             var day3 = new Day3();
-            day3.Solve();
+            //day3.Solve();
+
+            var day4 = new Day4();
+            day4.Solve();
         }
     }
 }
